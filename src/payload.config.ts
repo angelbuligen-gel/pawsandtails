@@ -10,6 +10,7 @@ import { Categories } from './collections/Categories'
 import { Products } from './collections/Products'
 import { Orders } from './collections/Orders'
 import { Reviews } from './collections/Reviews'
+import { migrations } from './migrations'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -57,6 +58,7 @@ export default buildConfig({
     client: {
       url: process.env.DATABASE_URL || `file:${path.resolve(dirname, '../pawsandtails.db')}`,
     },
+    prodMigrations: migrations,
   }),
   sharp,
   plugins: [],
