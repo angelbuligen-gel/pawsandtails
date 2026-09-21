@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: pawsandtails
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: PAYLOAD_SECRET
+        generateValue: true
+      - key: AIVEN_MYSQL_HOST
+        value: mysql-4a1e757-adalavalust.k.aivencloud.com
+      - key: AIVEN_MYSQL_PORT
+        value: "19703"
+      - key: AIVEN_MYSQL_USER
+        value: avnadmin
+      - key: AIVEN_MYSQL_PASSWORD
+        value: AVNS_yLCRClqcAZFife6krA5
+      - key: AIVEN_MYSQL_DATABASE
+        value: cmspawsandtails
