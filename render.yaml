@@ -10,7 +10,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
-        value: 20.18.0
+        value: 20.18.3
       - key: PAYLOAD_SECRET
         generateValue: true
       - key: AIVEN_MYSQL_HOST
