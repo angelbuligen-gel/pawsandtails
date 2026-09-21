@@ -9,6 +9,80 @@ export const Products: CollectionConfig = {
   access: {
     read: () => true,
     create: () => true,
+    update: () => true,
+    delete: () => true,
+  },
+  hooks: {
+    afterChange: [
+      async ({ doc }) => {
+        try {
+          const { getAivenPool } = await import('@/lib/aiven')
+          const pool = getAivenPool()
+          await pool.query(
+            `INSERT INTO products (
+              title, slug, category_name, pet_type, price, original_price, stock, 
+              rating, reviews_count, sku, image_url, excerpt, description, 
+              key_benefits, ingredients, usage_guide, weight_size, brand, is_featured
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+              title=VALUES(title),
+              category_name=VALUES(category_name),
+              pet_type=VALUES(pet_type),
+              price=VALUES(price),
+              original_price=VALUES(original_price),
+              stock=VALUES(stock),
+              rating=VALUES(rating),
+              reviews_count=VALUES(reviews_count),
+              sku=VALUES(sku),
+              image_url=VALUES(image_url),
+              excerpt=VALUES(excerpt),
+              description=VALUES(description),
+              key_benefits=VALUES(key_benefits),
+              ingredients=VALUES(ingredients),
+              usage_guide=VALUES(usage_guide),
+              weight_size=VALUES(weight_size),
+              brand=VALUES(brand),
+              is_featured=VALUES(is_featured)`,
+            [
+              doc.title,
+              doc.slug,
+              doc.category,
+              doc.petType,
+              doc.price,
+              doc.originalPrice || null,
+              doc.stock ?? 25,
+              doc.rating ?? 5.0,
+              doc.reviewsCount ?? 12,
+              doc.sku,
+              doc.imageUrl,
+              doc.excerpt || null,
+              doc.description || null,
+              typeof doc.keyBenefits === 'string' ? doc.keyBenefits : JSON.stringify(doc.keyBenefits || []),
+              doc.ingredients || null,
+              doc.usageGuide || null,
+              doc.weightSize || null,
+              doc.brand || 'Paws & Tails Choice',
+              doc.isFeatured ? 1 : 0,
+            ]
+          )
+          console.log(`[Payload Sync] Synced product "${doc.title}" to Aiven MySQL`)
+        } catch (err) {
+          console.error('[Payload Sync] Error syncing product to Aiven MySQL:', err)
+        }
+      },
+    ],
+    afterDelete: [
+      async ({ doc }) => {
+        try {
+          const { getAivenPool } = await import('@/lib/aiven')
+          const pool = getAivenPool()
+          await pool.query('DELETE FROM products WHERE slug = ?', [doc.slug])
+          console.log(`[Payload Sync] Deleted product "${doc.slug}" from Aiven MySQL`)
+        } catch (err) {
+          console.error('[Payload Sync] Error deleting product from Aiven MySQL:', err)
+        }
+      },
+    ],
   },
   fields: [
     {

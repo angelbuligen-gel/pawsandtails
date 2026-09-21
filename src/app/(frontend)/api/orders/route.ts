@@ -43,6 +43,38 @@ export async function POST(req: NextRequest) {
     // Ensure tables exist
     try { await initAivenTables() } catch { /* noop */ }
 
+    // 1. Dual-write to Payload CMS Orders collection
+    try {
+      const { getPayload } = await import('payload')
+      const config = (await import('@payload-config')).default
+      const payload = await getPayload({ config })
+      await payload.create({
+        collection: 'orders',
+        data: {
+          orderNumber,
+          customerName: name,
+          customerPhone: phone,
+          customerEmail: email || undefined,
+          shippingAddress: address,
+          cityProvince: city,
+          courier: 'J&T Express Philippines',
+          paymentMethod: paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : paymentMethod === 'maya' ? 'Maya' : paymentMethod === 'card' ? 'Credit / Debit Card' : 'GCash',
+          paymentReference: paymentReference || undefined,
+          subtotal: Number(subtotal),
+          shippingFee: Number(shippingFee),
+          totalAmount,
+          status: paymentMethod === 'cod' ? 'kit_preparing' : 'payment_verifying',
+          trackingNumber,
+          items,
+          notes: notes || undefined,
+        },
+      })
+      console.log(`[Order Created] Stored order #${orderNumber} into Payload CMS`)
+    } catch (payloadOrderErr) {
+      console.warn('[Order Created] Notice on Payload order creation:', payloadOrderErr)
+    }
+
+    // 2. Dual-write to Aiven Cloud MySQL
     await insertOrderToAiven({
       orderNumber,
       customerName: name,
